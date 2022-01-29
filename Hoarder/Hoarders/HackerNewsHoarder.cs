@@ -24,5 +24,14 @@ public class HackerNewsHoarder
 
             titles.AddRange(res);
         }
+
+        var path = Path.Combine(Directory.GetCurrentDirectory(), "out.txt");
+        if(File.Exists(path))
+        {
+            var lines = File.ReadAllLines(path);
+            foreach(var line in lines)
+                titles = titles.Where(t => !t.Contains(line)).ToList();
+            File.AppendAllLines(path, titles);
+        } else File.WriteAllLines(path, titles);
     }
 }

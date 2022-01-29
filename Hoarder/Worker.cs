@@ -37,7 +37,10 @@ public class Worker : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             foreach(var hoarderTask in hoarderTasks)
+            {
+                _logger.LogInformation($"Running {hoarderTask.Name}");
                 Activator.CreateInstance(hoarderTask);
+            }
             
             await Task.Delay((int)_interval.AsTimeSpan().TotalMilliseconds);
         }
