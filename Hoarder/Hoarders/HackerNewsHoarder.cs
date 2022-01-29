@@ -1,5 +1,7 @@
 using System.Linq;
 using Hoarder.Attributes;
+using Hoarder.Data;
+using Hoarder.Models;
 using Hoarder.Services;
 
 namespace Hoarder.Hoarders;
@@ -9,7 +11,7 @@ public class HackerNewsHoarder
 {
     private readonly string url = "https://news.ycombinator.com/";
 
-    public HackerNewsHoarder()
+    public HackerNewsHoarder(IServiceScopeFactory serviceScopeFactory)
     {
         var htmlService = new HtmlService();
         var doc = htmlService.Fetch(url);
@@ -25,13 +27,15 @@ public class HackerNewsHoarder
             titles.AddRange(res);
         }
 
-        var path = Path.Combine(Directory.GetCurrentDirectory(), "out.txt");
-        if(File.Exists(path))
+        using(var scope = serviceScopeFactory.CreateScope())
         {
-            var lines = File.ReadAllLines(path);
-            foreach(var line in lines)
-                titles = titles.Where(t => !t.Contains(line)).ToList();
-            File.AppendAllLines(path, titles);
-        } else File.WriteAllLines(path, titles);
+            var context = scope.ServiceProvider.GetService<DataContext>();
+            var titlesInDb = context.Titles.ToList();
+            var newTitles = titles.Select(t => new TitleModel(t))
+                    .Where(t => !titlesInDb.Contains(t))
+                    .ToList();
+            context.Titles.AddRange(newTitles);
+            context.SaveChanges();
+        }
     }
 }
