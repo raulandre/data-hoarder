@@ -13,22 +13,22 @@ public class HackerNewsHoarder
 
     public HackerNewsHoarder(IServiceScopeFactory serviceScopeFactory)
     {
-        var htmlService = new HtmlService();
-        var doc = htmlService.Fetch(url);
-        var nodes = doc.DocumentNode.SelectNodes("//tr[@class='athing']").ToList();
-
-        var titles = new List<string>();
-        foreach(var node in nodes)
+        using (var scope = serviceScopeFactory.CreateScope())
         {
-            var res = node.Descendants()
-                .Where(n => n.GetClasses().Contains("titlelink"))
-                .Select(t => t.InnerText);
+            var htmlService = scope.ServiceProvider.GetService<HtmlService>();
+            var doc = htmlService.Fetch(url);
+            var nodes = doc.DocumentNode.SelectNodes("//tr[@class='athing']").ToList();
 
-            titles.AddRange(res);
-        }
+            var titles = new List<string>();
+            foreach (var node in nodes)
+            {
+                var res = node.Descendants()
+                    .Where(n => n.GetClasses().Contains("titlelink"))
+                    .Select(t => t.InnerText);
 
-        using(var scope = serviceScopeFactory.CreateScope())
-        {
+                titles.AddRange(res);
+            }
+
             var context = scope.ServiceProvider.GetService<DataContext>();
             var titlesInDb = context.Titles.ToList();
             var newTitles = titles.Select(t => new TitleModel(t))

@@ -19,7 +19,7 @@ public class TitleModel : IEquatable<TitleModel>
     public static implicit operator TitleModel(string title)
         => new TitleModel(title);
 
-    public bool Equals(TitleModel? other)
+    public bool Equals(TitleModel other)
     {
         return Title == other.Title;
     }
